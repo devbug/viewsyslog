@@ -1,0 +1,9 @@
+Package: me.devbug.viewsyslog
+Name: syslog
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: Display syslog without interaction
+Maintainer: deVbug <devbug@devbug.me>
+Author: deVbug <devbug@devbug.me>
+Section: System
+Tag: role::hacker
