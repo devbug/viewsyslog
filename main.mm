@@ -26,7 +26,7 @@
 #include <sys/socket.h>
 
 
-#define BUFFER_SIZE			80
+#define BUFFER_SIZE			1024
 
 int main(int argc, char **argv, char **envp)
 {
@@ -55,6 +55,18 @@ int main(int argc, char **argv, char **envp)
 		buffer = (char *)malloc(BUFFER_SIZE*sizeof(char));
 		memset(buffer, 0, BUFFER_SIZE);
 		readlen = read(sockfd, buffer, BUFFER_SIZE-1);
+
+		while (buffer+readlen != buffer+strlen(buffer)) {
+			int i, len = strlen(buffer);
+			for (i=-1;*(buffer+len+i)=='\n';i--)
+				*(buffer+len+i) = ' ';
+			for (i=1;*(buffer+len+i)=='\n';i++)
+				*(buffer+len+i) = ' ';
+			i--;
+			*(buffer+len+i) = '\n';
+			if (i != 0)
+				*(buffer+len) = ' ';
+		}
 
 		if (readlen >= BUFFER_SIZE-1) {
 			int realloc_count = 1;
