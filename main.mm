@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <sys/socket.h>
-#include "regex.h"
+#include <regex.h>
 
 
 #define BUFFER_SIZE			1024
@@ -65,6 +65,8 @@ char *recvDataToNewBuffer(const int sockfd)
 		while (readlen >= BUFFER_SIZE-1) {
 			realloc_count++;
 			buffer = (char *)realloc(buffer, BUFFER_SIZE*sizeof(char)*realloc_count);
+			if (buffer == NULL) return buffer;
+
 			realloc_ptr = buffer+strlen(buffer);
 			readlen = readSocket(sockfd, realloc_ptr, BUFFER_SIZE-1);
 
@@ -86,10 +88,9 @@ void printData(char * const buffer, regex_t *filter)
 	line = strtok(buffer, "\n");
 
 	while (line != NULL) {
-		if (line[0] != '\0') {
-			if (0 != strcmp("> ", line))
-				if (filter == NULL || regexec(filter, line, 0, NULL, 0) == 0)
-					puts(line);
+		if (line[0] != '\0' && 0 != strcmp("> ", line)) {
+			if (filter == NULL || regexec(filter, line, 0, NULL, 0) == 0)
+				puts(line);
 		}
 
 		line = strtok(NULL, "\n");
@@ -98,10 +99,10 @@ void printData(char * const buffer, regex_t *filter)
 
 int main(int argc, char **argv, char **envp)
 {
-	int sockfd;
-	char *buffer;
+	int sockfd = -1;
+	char *buffer = NULL;
 	
-	int regex_error;
+	int regex_error = 0;
 	regex_t preg;
 	BOOL on_regex = NO;
 
@@ -111,6 +112,7 @@ int main(int argc, char **argv, char **envp)
 	}
 
 	if (argc == 2) {
+		// no case test ==> add | REG_ICASE
 		if (0 != (regex_error = regcomp(&preg, argv[1], REG_EXTENDED | REG_NOSUB))) {
 			fprintf(stderr, "%s: wrong regular expression pattern\n", argv[0]);
 			fprintf(stderr, "%s: ignore pattern\n", argv[0]);
@@ -136,11 +138,14 @@ int main(int argc, char **argv, char **envp)
 	sockfd = socket(PF_LOCAL, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		perror("socket error : ");
+		if (on_regex) regfree(&preg);
 		exit(0);
 	}
 
 	if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		perror("connect error : ");
+		if (on_regex) regfree(&preg);
+		close(sockfd);
 		exit(0);
 	}
 
