@@ -1,8 +1,8 @@
 Package: me.devbug.viewsyslog
-Name: syslog
+Name: viewsyslog
 Version: 0.0.1
 Architecture: iphoneos-arm
-Description: Display syslog without interaction
+Description: Display syslog
 Maintainer: deVbug <devbug@devbug.me>
 Author: deVbug <devbug@devbug.me>
 Section: System
